@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恋について · 愛羅武勇</title>
+<style>
+  :root{
+    --bg:#000000;
+    --fg:#e8e8e8;
+    --dim:#8a8a8a;
+    --line:#2a2a2a;
+    --line2:#3c3c3c;
+    --red:#ff1a1a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:'Courier New', 'Yu Gothic', 'Noto Sans JP', monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:2rem 1.2rem;
+    overflow-x:hidden;
+    position:relative;
+    transition:background .15s;
+  }
+
+  /* ===== Dekorasi garis abstrak / vektor ===== */
+  .vector-deco{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    overflow:hidden;
+  }
+  .vector-deco svg{
+    width:100%;
+    height:100%;
+    opacity:.55;
+  }
+  .vector-deco svg *{
+    stroke:#2a2a2a;
+    fill:none;
+    stroke-width:1;
+    vector-effect:non-scaling-stroke;
+  }
+
+  /* ===== Language switcher ===== */
+  .lang-switch{
+    position:fixed;
+    top:1.1rem;
+    right:1.1rem;
+    z-index:50;
+    display:flex;
+    gap:.5rem;
+    font-size:.65rem;
+    letter-spacing:.15em;
+  }
+  .lang-switch button{
+    background:transparent;
+    border:1px solid var(--line2);
+    color:var(--dim);
+    padding:.35rem .55rem;
+    font-family:inherit;
+    font-size:.62rem;
+    letter-spacing:.18em;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .lang-switch button:hover{border-color:#666;color:var(--fg);}
+  .lang-switch button.active{border-color:#888;color:#fff;}
+
+  /* ===== Container halaman ===== */
+  .stage{
+    position:relative;
+    z-index:10;
+    width:100%;
+    max-width:640px;
+    display:none;
+    flex-direction:column;
+    gap:2rem;
+    padding:2.4rem 1.6rem;
+    border:1px solid var(--line);
+    background:rgba(0,0,0,.72);
+    backdrop-filter:blur(2px);
+  }
+  .stage.active{display:flex;animation:fadeIn .5s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* sudut minimalis */
+  .stage::before,.stage::after{
+    content:"";
+    position:absolute;
+    width:14px;height:14px;
+    border-style:solid;
+    border-color:#3a3a3a;
+  }
+  .stage::before{top:8px;left:8px;border-width:1px 0 0 1px;}
+  .stage::after{bottom:8px;right:8px;border-width:0 1px 1px 0;}
+
+  /* ===== Tipografi ===== */
+  h1{
+    font-size:1.1rem;
+    font-weight:400;
+    letter-spacing:.35em;
+    color:#f2f2f2;
+    text-align:center;
+    text-transform:uppercase;
+  }
+  h1 .thin{color:var(--dim);font-size:.7rem;display:block;margin-top:.5rem;letter-spacing:.4em;}
+
+  .divider{
+    width:100%;
+    height:1px;
+    background:linear-gradient(90deg,transparent,#333,#555,#333,transparent);
+    margin:.2rem 0;
+  }
+
+  p.essay{
+    font-size:.82rem;
+    line-height:2;
+    letter-spacing:.05em;
+    color:#cfcfcf;
+    text-align:justify;
+    text-justify:inter-ideograph;
+  }
+  p.essay .accent{color:#fff;}
+  p.essay .faint{color:#6a6a6a;}
+
+  label.field-label{
+    display:block;
+    font-size:.68rem;
+    letter-spacing:.3em;
+    color:var(--dim);
+    text-transform:uppercase;
+    margin-bottom:.7rem;
+  }
+
+  input[type="text"]{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid #444;
+    color:#fff;
+    font-family:inherit;
+    font-size:1rem;
+    letter-spacing:.15em;
+    padding:.6rem .2rem;
+    outline:none;
+    transition:border-color .3s;
+  }
+  input[type="text"]:focus{border-bottom-color:#aaa;}
+  input[type="text"]::placeholder{color:#444;letter-spacing:.1em;font-size:.8rem;}
+
+  button.primary{
+    align-self:center;
+    background:transparent;
+    border:1px solid #555;
+    color:#eee;
+    font-family:inherit;
+    font-size:.78rem;
+    letter-spacing:.4em;
+    text-transform:uppercase;
+    padding:.85rem 2.6rem;
+    cursor:pointer;
+    transition:.25s;
+    margin-top:.4rem;
+  }
+  button.primary:hover:not(:disabled){
+    border-color:#fff;
+    background:#0d0d0d;
+    letter-spacing:.5em;
+  }
+  button.primary:disabled{
+    opacity:.28;
+    cursor:not-allowed;
+    border-color:#333;
+    color:#666;
+  }
+
+  .hint{
+    font-size:.6rem;
+    letter-spacing:.2em;
+    color:#555;
+    text-align:center;
+  }
+  .hint.warn{color:#b06a6a;}
+
+  /* ===== Halaman 3: pilihan ===== */
+  .question{
+    font-size:.95rem;
+    line-height:2.1;
+    letter-spacing:.08em;
+    text-align:center;
+    color:#eaeaea;
+  }
+  .question .name{color:#fff;border-bottom:1px solid #444;padding-bottom:2px;}
+
+  .choices{
+    display:flex;
+    gap:1.4rem;
+    justify-content:center;
+    margin-top:.6rem;
+  }
+  .choices button{
+    flex:1;
+    max-width:180px;
+    background:transparent;
+    font-family:inherit;
+    font-size:.82rem;
+    letter-spacing:.35em;
+    text-transform:uppercase;
+    padding:1rem 1.2rem;
+    cursor:pointer;
+    transition:.22s;
+  }
+  #btnYes{border:1px solid #4a6a4a;color:#a8d8a8;}
+  #btnYes:hover{background:#0a1a0a;border-color:#7fb87f;color:#d0ffd0;}
+  #btnNo{border:1px solid #5a3a3a;color:#c88;}
+  #btnNo:hover{background:#1a0808;border-color:#a55;color:#fbb;}
+
+  /* ===== Halaman 4: jawaban "Iya" ===== */
+  .sweet{
+    font-size:.85rem;
+    line-height:2.1;
+    letter-spacing:.06em;
+    color:#d8d8d8;
+    text-align:center;
+  }
+  .sweet .em{color:#fff;}
+
+  a.love-link{
+    align-self:center;
+    display:inline-block;
+    margin-top:.6rem;
+    padding:.9rem 2.2rem;
+    border:1px solid #555;
+    color:#eee;
+    font-size:.75rem;
+    letter-spacing:.3em;
+    text-decoration:none;
+    text-transform:uppercase;
+    transition:.25s;
+  }
+  a.love-link:hover{
+    border-color:#fff;
+    background:#0d0d0d;
+    letter-spacing:.4em;
+  }
+
+  /* ===== GLITCH MERAH (pilih Tidak) ===== */
+  body.glitch-mode{
+    background:#ff0000;
+    animation:redPulse .1s steps(2,end) infinite;
+  }
+  @keyframes redPulse{
+    0%{background:#ff0000;}
+    50%{background:#8b0000;}
+    100%{background:#ff0000;}
+  }
+  body.glitch-mode .vector-deco svg *{stroke:#ff9a9a;opacity:.35;}
+  body.glitch-mode .stage{
+    border-color:#fff;
+    background:rgba(0,0,0,.35);
+    animation:shake .1s infinite;
+  }
+  @keyframes shake{
+    0%{transform:translate(0,0) skewX(0);}
+    25%{transform:translate(-2px,1px) skewX(1deg);}
+    50%{transform:translate(2px,-1px) skewX(-1deg);}
+    75%{transform:translate(-1px,-2px) skewX(.5deg);}
+    100%{transform:translate(0,0) skewX(0);}
+  }
+  body.glitch-mode h1,
+  body.glitch-mode p,
+  body.glitch-mode .sweet,
+  body.glitch-mode .question{
+    color:#fff;
+    text-shadow:2px 0 #00ffff, -2px 0 #ff00ff, 0 0 12px #fff;
+    animation:glitchText .1s infinite;
+  }
+  @keyframes glitchText{
+    0%{text-shadow:2px 0 #00ffff,-2px 0 #ff00ff;}
+    50%{text-shadow:-3px 0 #00ffff,3px 0 #ff00ff;}
+    100%{text-shadow:2px 0 #00ffff,-2px 0 #ff00ff;}
+  }
+  body.glitch-mode .lang-switch,
+  body.glitch-mode .vector-deco{
+    animation:shake .1s infinite;
+  }
+
+  /* ===== Notifikasi ===== */
+  .notice{
+    font-size:.68rem;
+    letter-spacing:.2em;
+    color:#b06a6a;
+    text-align:center;
+    min-height:1em;
+    margin-top:-.4rem;
+  }
+
+  /* ===== Responsif ===== */
+  @media (max-width:520px){
+    .stage{padding:1.8rem 1.1rem;gap:1.6rem;}
+    h1{font-size:.95rem;letter-spacing:.22em;}
+    p.essay{font-size:.75rem;line-height:1.95;}
+    .choices{gap:.9rem;}
+    .choices button{padding:.85rem .6rem;letter-spacing:.25em;font-size:.72rem;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Dekorasi vektor abstrak (garis) ===== -->
+<div class="vector-deco" aria-hidden="true">
+  <svg viewBox="0 0 800 600" preserveAspectRatio="none">
+    <path d="M -50 120 L 280 120 L 320 80 L 520 80 L 560 120 L 850 120"/>
+    <path d="M -50 480 L 200 480 L 240 520 L 560 520 L 600 480 L 850 480"/>
+    <line x1="80" y1="-20" x2="80" y2="620"/>
+    <line x1="720" y1="-20" x2="720" y2="620"/>
+    <circle cx="400" cy="300" r="150" opacity=".4"/>
+    <circle cx="400" cy="300" r="210" opacity=".18"/>
+    <line x1="180" y1="200" x2="620" y2="400" opacity=".25"/>
+    <line x1="180" y1="400" x2="620" y2="200" opacity=".25"/>
+    <path d="M 400 60 L 420 100 L 380 100 Z" opacity=".35"/>
+  </svg>
+</div>
+
+<!-- ===== Pilihan bahasa ===== -->
+<div class="lang-switch">
+  <button id="langJa" class="active" onclick="setLang('ja')">日本語</button>
+  <button id="langEn" onclick="setLang('en')">ENGLISH</button>
+</div>
+
+<!-- ============================================================ -->
+<!-- STAGE 1 · 名前入力 + エッセイ（恋について）                    -->
+<!-- ============================================================ -->
+<section class="stage active" id="stage1">
+  <h1 data-ja="恋について" data-en="ABOUT LOVE">
+    恋について
+    <span class="thin" data-ja="— 静かな考察 —" data-en="— a quiet reflection —">— 静かな考察 —</span>
+  </h1>
+
+  <div class="divider"></div>
+
+  <p class="essay">
+    <span class="accent" data-ja="愛とは何か。" data-en="What is love?">愛とは何か。</span>
+    <span data-ja="それは、静かな夜にふと浮かぶ、ひとつの声。" data-en="It is a single voice that surfaces on a quiet night.">それは、静かな夜にふと浮かぶ、ひとつの声。</span>
+    <span class="faint" data-ja="言葉にすれば壊れそうで、けれど胸の奥で確かに脈打っている。" data-en="Speak it aloud and it might shatter — yet deep in the chest it keeps a steady pulse.">言葉にすれば壊れそうで、けれど胸の奥で確かに脈打っている。</span>
+    <span data-ja="人はなぜ、見えないものを信じられるのだろう。" data-en="Why is it that we can believe in something we cannot see?">人はなぜ、見えないものを信じられるのだろう。</span>
+    <span data-ja="答えはきっと、探すこと自体の中にある。" data-en="The answer surely lies in the searching itself.">答えはきっと、探すこと自体の中にある。</span>
+  </p>
+
+  <div class="divider"></div>
+
+  <div>
+    <label class="field-label" for="nameInput" data-ja="あなたの名前" data-en="Your name">あなたの名前</label>
+    <input type="text" id="nameInput" maxlength="24" autocomplete="off"
+           data-ja-placeholder="ここに名前を書いてください"
+           placeholder="ここに名前を書いてください">
+  </div>
+
+  <button class="primary" id="btnContinue" disabled data-ja="次へ" data-en="Continue">次へ</button>
+  <p class="notice" id="notice1"></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- STAGE 2 · 質問（好きですか？）                                 -->
+<!-- ============================================================ -->
+<section class="stage" id="stage2">
+  <h1 data-ja="ひとつの問い" data-en="ONE QUESTION">
+    ひとつの問い
+    <span class="thin" data-ja="— 心のままに —" data-en="— answer honestly —">— 心のままに —</span>
+  </h1>
+
+  <div class="divider"></div>
+
+  <p class="question" id="questionText"></p>
+
+  <div class="divider"></div>
+
+  <div class="choices">
+    <button id="btnYes" data-ja="はい" data-en="Yes">はい</button>
+    <button id="btnNo" data-ja="いいえ" data-en="No">いいえ</button>
+  </div>
+
+  <p class="notice" id="notice2"></p>
+</section>
+
+<!-- ============================================================ -->
+<!-- STAGE 3 · はい を選んだ場合                                    -->
+<!-- ============================================================ -->
+<section class="stage" id="stage3">
+  <h1 data-ja="ありがとう" data-en="THANK YOU">
+    ありがとう
+    <span class="thin" data-ja="— 心から —" data-en="— from the heart —">— 心から —</span>
+  </h1>
+
+  <div class="divider"></div>
+
+  <p class="sweet">
+    <span class="em" data-ja="嬉しい。本当に、嬉しい。" data-en="I'm happy. Truly, happy.">嬉しい。本当に、嬉しい。</span>
+    <span data-ja="この気持ちを、言葉だけでは足りないけれど。" data-en="Words alone are not enough for this feeling.">この気持ちを、言葉だけでは足りないけれど。</span>
+    <span data-ja="もしよければ、下の扉を開けてみて。" data-en="If you'd like, open the door below.">もしよければ、下の扉を開けてみて。</span>
+    <span class="faint" data-ja="あなたのペースで、ゆっくりと。" data-en="At your own pace, slowly.">あなたのペースで、ゆっくりと。</span>
+  </p>
+
+  <div class="divider"></div>
+
+  <a class="love-link" href="https://mylovershit.github.io/...../" target="_blank" rel="noopener"
+     data-ja="扉を開く" data-en="Open the door">扉を開く</a>
+
+  <p class="hint" data-ja="※ タップするまで開きません" data-en="※ will not open until you tap">※ タップするまで開きません</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- STAGE 4 · いいえ を選んだ場合（グリッチ）                       -->
+<!-- ============================================================ -->
+<section class="stage" id="stage4">
+  <h1 data-ja="そう……" data-en="I see...">
+    そう……
+    <span class="thin" data-ja="— それでも —" data-en="— even so —">— それでも —</span>
+  </h1>
+
+  <div class="divider"></div>
+
+  <p class="sweet" style="font-size:.95rem;letter-spacing:.3em;">
+    <span data-ja="そう……" data-en="I see...">そう……</span>
+  </p>
+
+  <div class="divider"></div>
+
+  <p class="hint warn" data-ja="※ もう一度、考えてみて" data-en="※ think again">※ もう一度、考えてみて</p>
+  <button class="primary" id="btnBack" data-ja="戻る" data-en="Go back">戻る</button>
+</section>
+
+<!-- ============================================================ -->
+<!-- JAVASCRIPT                                                     -->
+<!-- ============================================================ -->
+<script>
+/* ============ STATE ============ */
+let currentLang = 'ja';
+let userName = '';
+
+/* ============ TEXT DICTIONARY (fallback) ============ */
+const dict = {
+  ja: {
+    noticeNameEmpty: '名前を入力してください',
+    question: (n) => `${n}さん、あなたは私のことが好きですか？`,
+    pageTitleNo: 'そう……',
+    pageTitleYes: 'ありがとう'
+  },
+  en: {
+    noticeNameEmpty: 'Please enter your name',
+    question: (n) => `${n}-kun, do you like me?`,
+    pageTitleNo: 'I see...',
+    pageTitleYes: 'Thank you'
+  }
+};
+
+/* ============ LANGUAGE SWITCH ============ */
+function setLang(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.getElementById('langJa').classList.toggle('active', lang === 'ja');
+  document.getElementById('langEn').classList.toggle('active', lang === 'en');
+
+  /* Update semua elemen dengan data-ja / data-en */
+  document.querySelectorAll('[data-ja]').forEach(el => {
+    const txt = el.getAttribute('data-' + lang);
+    if (txt !== null) el.textContent = txt;
+  });
+  document.querySelectorAll('[data-ja-placeholder]').forEach(el => {
+    const ph = el.getAttribute('data-' + lang + '-placeholder')
+            || el.getAttribute('data-ja-placeholder');
+    if (ph) el.placeholder = ph;
+  });
+
+  /* Refresh pertanyaan jika stage2 sedang aktif */
+  if (document.getElementById('stage2').classList.contains('active')) {
+    renderQuestion();
+  }
+}
+
+/* ============ NAVIGASI STAGE ============ */
+function showStage(id){
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  /* Hentikan mode glitch jika pindah stage */
+  document.body.classList.remove('glitch-mode');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============ STAGE 1 : input nama ============ */
+const nameInput   = document.getElementById('nameInput');
+const btnContinue = document.getElementById('btnContinue');
+const notice1     = document.getElementById('notice1');
+
+nameInput.addEventListener('input', () => {
+  const val = nameInput.value.trim();
+  btnContinue.disabled = val.length === 0;
+  if (val.length > 0) notice1.textContent = '';
+});
+
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !btnContinue.disabled) btnContinue.click();
+});
+
+btnContinue.addEventListener('click', () => {
+  const val = nameInput.value.trim();
+  if (!val) {
+    notice1.textContent = dict[currentLang].noticeNameEmpty;
+    return;
+  }
+  userName = val;
+  renderQuestion();
+  showStage('stage2');
+});
+
+/* ============ STAGE 2 : pertanyaan ============ */
+const questionText = document.getElementById('questionText');
+const btnYes       = document.getElementById('btnYes');
+const btnNo        = document.getElementById('btnNo');
+const notice2      = document.getElementById('notice2');
+
+function renderQuestion(){
+  const safeName = userName
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  questionText.innerHTML =
+    `<span class="name">${safeName}</span>` +
+    (currentLang === 'ja'
+      ? 'さん、あなたは私のことが好きですか？'
+      : '-kun, do you like me?');
+}
+
+btnYes.addEventListener('click', () => {
+  notice2.textContent = '';
+  showStage('stage3');
+});
+
+btnNo.addEventListener('click', () => {
+  notice2.textContent = '';
+  /* Aktifkan mode glitch MERAH */
+  document.body.classList.add('glitch-mode');
+  showStage('stage4');
+});
+
+/* ============ STAGE 4 : tombol kembali ============ */
+document.getElementById('btnBack').addEventListener('click', () => {
+  document.body.classList.remove('glitch-mode');
+  showStage('stage2');
+});
+
+/* ============ INISIALISASI ============ */
+setLang('ja');
+</script>
+</body>
+  </html>
